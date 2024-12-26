@@ -93,8 +93,11 @@ def get_download_page_url(video_url: str):
         )
 
     # idna encode url to work with requests
-    encoded_url = f'https:{redirect.headers["location"]}'
-    idna_url = convert_to_punycode(encoded_url)
+    encoded_url = redirect.headers["location"]
+    try:
+        idna_url = convert_to_punycode(f'https:{encoded_url}')
+    except:
+        idna_url = encoded_url
 
     # parse the decoded html to extract serverforms url and token from the decoded html
     response = requests.get(idna_url)
