@@ -138,8 +138,98 @@ def get_download_link(download_page_url: str):
         msg = 'Could not extract download link from download page'
         raise Exception(msg)
 
+
+def get_series_info(series_page_url: str):
+    # get html from request
+    response = requests.get(series_page_url)
+    html = BeautifulSoup(response.text, 'html.parser')
+
+    # get page title
+    title = html.title.text
+
+    # get div containing the episodes
+    episodes_div = html.find('div', class_='pm-category-description')
+    if episodes_div is None:
+        episodes_div = html.find('div', {'itemprop': 'description'})
+
+    # get the links of every episode and their information
+    links: list[BeautifulSoup] = episodes_div.find_all('a')
+    link_info_list = []
+    for link in links:
+        link_info = {
+            'url': link.get('href'),
+            'url_text': link.text,
+            'number_str': link.previous_sibling.previous_sibling,
+            'title_str': link.previous_sibling,
+        }
+        link_info_list.append(link_info)
+
+    series_dict = {'title': title, 'seasons': []}
+    season_dict = {'season': 0, 'episodes': []}
+    others_dict = {'others': []}
+    last_episode_number = 999
+    season_number = 0
+    for i, link in enumerate(link_info_list):
+        if link is None:
+            continue
+
+        # get episode title
+        episode_title = link['title_str'].text.strip(' -')
+
+        # get episode number
+        episode_number = re.sub(r"\D", '', link['number_str'].text)
+        if episode_number:
+            episode_number = int(episode_number)
+        else:
+            episode_title = link['number_str'].text + episode_title
+            episode_number = last_episode_number
+
+        # get new season if episode number went back to one
+        if last_episode_number > episode_number:
+            season_number += 1
+            
+            # save last season dict
+            if season_dict['episodes']:
+                series_dict['seasons'].append(season_dict)
+            
+            # create new season dict
+            season_dict = {'season': season_number, 'episodes': []}
+        
+        # save to others if no episode number was found
+        elif last_episode_number == episode_number:
+            others_dict['others'].append({'title': episode_title, 'url_1': f'{REDECANAIS_URL}{link['url']}'})
+            continue
+        
+        # create episode dict
+        episode_dict = {
+            'number': episode_number,
+            'title': episode_title,
+            'url_1': f'{REDECANAIS_URL}{link['url']}',
+            'url_2': '',
+        }
+
+        # include subtitled url as url_2, if avaliable
+        if link['url_text'] == 'Dublado':
+            next_link = link_info_list[i+1]
+            if next_link['url_text'] == 'Legendado':
+                episode_dict.update({'url_2': f'{REDECANAIS_URL}{next_link['url']}'})
+                link_info_list[i+1] = None
+
+        # update season dict and update last_episode
+        season_dict['episodes'].append(episode_dict)
+        last_episode_number = episode_number
+
+    # append the final season to the series dict
+    series_dict['seasons'].append(season_dict)
+
+    # append others section if not epmpty
+    if others_dict['others']:
+        series_dict.update(others_dict)
+    
+    return series_dict
+
 # source can be the title of the page or an url
-def get_info(source: str):
+def get_video_info(source: str):
     if 'https://' in source:
         # get video page
         video_page_html = requests.get(source)
@@ -181,6 +271,8 @@ def get_info(source: str):
         return {'type': 'movie', 'title': title}
 
 
+# TODO: update it to receive url and output file
+# TODO: create function to manage downloads
 def download(video_page_url: str):
     # get video page
     video_page_html = requests.get(video_page_url)
@@ -188,7 +280,7 @@ def download(video_page_url: str):
 
     # get video info
     title = video_page_html.find('title').text
-    video_info = get_info(title)
+    video_info = get_video_info(title)
 
     # get video url
     for iframe in video_page_html.find_all('iframe'):
