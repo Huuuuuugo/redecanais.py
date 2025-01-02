@@ -301,23 +301,23 @@ def download(video_page_url: str):
         file_dir = f'{video_info['serie_name']}/{video_info['season']}/'
         file_name = f"{video_info['episode']}{f' - {video_info['title']}' if video_info['title'] else ''}.mp4"
 
-    # create otput dir and check if the file already exists
+    # create output dir
     os.makedirs(file_dir, exist_ok=True)
     file_path = f'{file_dir}{file_name}'
-    if not os.path.exists(file_path):
-        # start download
-        download = Download(
-            download_link, 
-            file_path,
-            headers={'Referer': download_page_url}
-            )
-        download.start()
 
-        # show progress
-        while download.is_running:
-            print(f'{file_dir}{file_name} - {download.progress:.2f}%     ', end='\r')
-            time.sleep(0.1)
-        print(f'{file_dir}{file_name} - 100%     ')
+    # start download
+    download = Download(
+        download_link, 
+        file_path,
+        headers={'Referer': download_page_url}
+        )
+    download.start()
+
+    # show progress
+    while download.is_running:
+        print(f'{file_dir}{file_name} - {download.progress:.2f}%     ', end='\r')
+        time.sleep(0.1)
+    print(f'{file_dir}{file_name} - 100%     ')
 
 
 if __name__ == "__main__":
