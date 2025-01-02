@@ -5,7 +5,6 @@ import os
 
 import requests
 
-# TODO FIXME: the download is not resuming propperly
 class Download():
     def __init__(
             self, 
@@ -31,7 +30,6 @@ class Download():
         self.try_continue = try_continue
         if except_status_codes is None:
             self.except_status_codes = [404, 403, 400, 405, 408, 410, 411, 412, 415, 429, 500, 501, 502, 503, 504]
-
         else:
             self.except_status_codes = except_status_codes
 
@@ -49,7 +47,7 @@ class Download():
             
             # set range to resume download if any byte has already been written
             if self.written_bytes:
-                headers.update({"Range": f"bytes={self.written_bytes}-"})
+                self.headers.update({"Range": f"bytes={self.written_bytes}-"})
         
         else:
             self.total_size = 0
