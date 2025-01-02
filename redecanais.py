@@ -242,10 +242,10 @@ def get_video_info(source: str):
         title = source
 
     # get video info
-    title_info = title.split('-')
+    title_info = title.split(' - ')
     if 'Episódio' in ''.join(title_info[1:]):
         # extract information from video title
-        serie_name = title_info[0].strip()
+        serie_name = re.sub(r'[\\\/\:\"\*\?\<\>\|]', '', title_info[0].strip())
 
         season = 0
         episode = 0
@@ -253,7 +253,7 @@ def get_video_info(source: str):
         ep_found = False
         for info in title_info[1:]:
             if ep_found:
-                title = re.sub(r'[\\\/\:\"\*\?\<\>\|]', '-', info.strip())
+                title = re.sub(r'[\\\/\:\"\*\?\<\>\|]', '', info.strip())
             elif 'Temporada' in info:
                 season = int(re.sub(r'\D', '', info))
             elif 'Episódio' in info:
@@ -265,7 +265,7 @@ def get_video_info(source: str):
     
     else:
         # extract information from video title
-        title = re.sub(r'[\\\/\:\"\*\?\<\>\|]', '-', title_info[0].strip())
+        title = re.sub(r'[\\\/\:\"\*\?\<\>\|]', '', title_info[0].strip())
         
         # arrange information on a dict
         return {'type': 'movie', 'title': title}
