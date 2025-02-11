@@ -117,9 +117,9 @@ def get_download_page_url(video_url: str):
         )
     
     # get download page url from serverforms
-    download_page_url = re.findall(r'baixar=\"\.(/.+?)\"', serverforms_response.text)
+    download_page_url = re.findall(r'baixar=\"https://.+?r=(.+?)\"', serverforms_response.text)
     if download_page_url:
-        return f'{VIDEO_HOST_URL}{download_page_url[0]}'
+        return download_page_url[0]
     else:
         msg = 'Could not extract download page url from serverforms html.'
         raise Exception(msg)
@@ -275,8 +275,9 @@ def get_video_info(source: str):
 # TODO: create function to manage downloads
 def download(video_page_url: str):
     # get video page
-    video_page_html = requests.get(video_page_url)
-    video_page_html = BeautifulSoup(video_page_html.text, 'html.parser')
+    video_page_response = requests.get(video_page_url)
+    decoded_video_page = decode_from_response(video_page_response)
+    video_page_html = BeautifulSoup(decoded_video_page, "html.parser")
 
     # get video info
     title = video_page_html.find('title').text
@@ -317,7 +318,7 @@ def download(video_page_url: str):
     while download.is_running:
         print(f'{file_dir}{file_name} - {download.progress:.2f}%     ', end='\r')
         time.sleep(0.1)
-    print(f'{file_dir}{file_name} - 100%     ')
+    print(f'{file_dir}{file_name} - 100.00%     ')
 
 
 if __name__ == "__main__":
