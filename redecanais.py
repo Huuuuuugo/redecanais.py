@@ -58,7 +58,7 @@ def decode_redecanais(payload: list[str], key: int):
             continue
     
     # return the decoded content
-    return ''.join(final_chars)
+    return ''.join(final_chars).encode('latin1').decode('utf8')
 
 
 def decode_from_response(response: requests.Response):
@@ -232,8 +232,9 @@ def get_series_info(series_page_url: str):
 def get_video_info(source: str):
     if 'https://' in source:
         # get video page
-        video_page_html = requests.get(source)
-        video_page_html = BeautifulSoup(video_page_html.text, 'html.parser')
+        video_page_response = requests.get(source)
+        decoded_video_page = decode_from_response(video_page_response)
+        video_page_html = BeautifulSoup(decoded_video_page, 'html.parser')
 
         # get page title
         title = video_page_html.find('title').text
