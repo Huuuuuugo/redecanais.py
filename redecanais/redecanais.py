@@ -9,7 +9,7 @@ import os
 from bs4 import BeautifulSoup
 import requests
 
-from downloader import *
+from .downloader import *
 
 
 REDECANAIS_URL = 'https://redecanais.ec'
@@ -322,7 +322,7 @@ def download(video_page_url: str):
     print(f'{file_dir}{file_name} - 100.00%     ')
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) > 1:
         video_page_url = sys.argv[1]
         if len(sys.argv) > 2:
@@ -333,3 +333,6 @@ if __name__ == "__main__":
         exit('Example usage: python redecanais.py <video_page_url>')
 
     download(video_page_url)
+
+if __name__ == "__main__":
+    main()
